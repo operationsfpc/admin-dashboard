@@ -4599,6 +4599,7 @@ const name = (rec && (rec.campus_manager_name || rec.senior_manager_name)) || ''
   saveBtn.textContent = 'Filing…';
   hide('dlog-saved');
   const payload = {
+    id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10)),
     college: sessionCollege,
     manager_name: name || null,
     log_date: date,
@@ -5015,6 +5016,7 @@ if(countWords(satisfactionRemarks) < 20){
    const seniorManagerEmail = rec ? rec.senior_manager_email : null;
     const name = (rec && (rec.campus_manager_name || rec.senior_manager_name)) || '';
     const payload = {
+      id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10)),
       college: sessionCollege,
       manager_name: name || null,
       class_name: department || null,
