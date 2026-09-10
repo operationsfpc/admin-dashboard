@@ -1935,7 +1935,11 @@ body[data-theme="dark"] .dlog-topbar {
   </div>
   <div class="dlog-topbar">
     <div class="breadcrumb">Daily Activity Log / <b id="dlog-college-name-crumb">—</b></div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-ghost" onclick="openCsnapExportModal()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);font-weight:600;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export CSV</span>
+      </button>
       <button class="btn btn-ghost" onclick="backToPlatformSelect()">← Switch platform</button>
       <button class="btn btn-ghost" onclick="logout()">Log out</button>
     </div>
@@ -2024,7 +2028,11 @@ body[data-theme="dark"] .dlog-topbar {
   </div>
   <div class="dlog-topbar">
     <div class="breadcrumb">Classroom Observations / <b id="csnap-breadcrumb-college">—</b></div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-ghost" onclick="openCsnapExportModal()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);font-weight:600;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export CSV</span>
+      </button>
       <button class="btn btn-ghost" onclick="backToPlatformSelect()">← Switch platform</button>
       <button class="btn btn-ghost" onclick="logout()">Log out</button>
     </div>
@@ -2041,6 +2049,10 @@ body[data-theme="dark"] .dlog-topbar {
             <span class="review-cal-month-label" id="csnap-cal-month-label">—</span>
             <button class="review-cal-nav-btn" onclick="csnapCalShift(1)" aria-label="Next month">›</button>
             <button class="btn btn-ghost" onclick="csnapCalToday()">Today</button>
+            <button class="btn btn-ghost" onclick="openCsnapExportModal()" title="Export observations to CSV" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Export</span>
+            </button>
           </div>
         </div>
         <div class="review-calendar">
@@ -2244,7 +2256,11 @@ body[data-theme="dark"] .dlog-topbar {
   </div>
   <div class="dlog-topbar">
     <div class="breadcrumb">Monthly Report Monitor / <b id="rm-breadcrumb-college">—</b></div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-ghost" onclick="openCsnapExportModal()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);font-weight:600;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export CSV</span>
+      </button>
       <button class="btn btn-ghost" onclick="backToPlatformSelect()">← Switch platform</button>
       <button class="btn btn-ghost" onclick="logout()">Log out</button>
     </div>
@@ -2323,7 +2339,11 @@ body[data-theme="dark"] .dlog-topbar {
   </div>
   <div class="dlog-topbar">
     <div class="breadcrumb">Review Panel / <b id="review-college-name">—</b></div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-ghost" onclick="openCsnapExportModal()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);font-weight:600;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export CSV</span>
+      </button>
       <button class="btn btn-ghost" onclick="backToPlatformSelect()">← Switch platform</button>
       <button class="btn btn-ghost" onclick="logout()">Log out</button>
     </div>
@@ -2473,6 +2493,91 @@ body[data-theme="dark"] .dlog-topbar {
     </div>
   </div>
 </div>
+
+<!-- ── CLASSROOM SNAP EXPORT MODAL ── -->
+<div id="csnap-export-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeCsnapExportModal()">
+  <div class="modal-box" style="max-width:500px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" style="display:flex;align-items:center;gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export Classroom Observations</span>
+        </div>
+        <div class="modal-meta">Download filtered classroom audit logs as a spreadsheet CSV</div>
+      </div>
+      <button class="modal-close" onclick="closeCsnapExportModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding-top:14px;">
+      <div style="display:flex;flex-direction:column;gap:13px;">
+        
+        <!-- College filter -->
+        <div class="form-group" id="csnap-exp-college-group">
+          <label class="field-label" style="font-weight:600;font-size:11.5px;color:var(--text-light);">College / Campus</label>
+          <select id="csnap-exp-college" class="form-input" style="width:100%;height:38px;" onchange="updateCsnapExpPreviewCount()">
+            <option value="all">All Available Colleges</option>
+          </select>
+        </div>
+
+        <!-- Date Range Filter Mode -->
+        <div class="form-group">
+          <label class="field-label" style="font-weight:600;font-size:11.5px;color:var(--text-light);">Date Range</label>
+          <select id="csnap-exp-date-mode" class="form-input" style="width:100%;height:38px;" onchange="onCsnapExpDateModeChange(this.value)">
+            <option value="current-month">Current Calendar Month (<span id="csnap-exp-month-name">Current</span>)</option>
+            <option value="all-time">All Time (Full History)</option>
+            <option value="custom">Custom Date Range</option>
+          </select>
+        </div>
+
+        <!-- Custom Date Inputs (hidden by default) -->
+        <div id="csnap-exp-custom-dates" class="hidden" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group">
+            <label class="field-label" style="font-size:11px;color:var(--text-faint);">From Date</label>
+            <input type="date" id="csnap-exp-start-date" class="form-input" style="width:100%;height:36px;" onchange="updateCsnapExpPreviewCount()" />
+          </div>
+          <div class="form-group">
+            <label class="field-label" style="font-size:11px;color:var(--text-faint);">To Date</label>
+            <input type="date" id="csnap-exp-end-date" class="form-input" style="width:100%;height:36px;" onchange="updateCsnapExpPreviewCount()" />
+          </div>
+        </div>
+
+        <!-- Status Filters Row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group">
+            <label class="field-label" style="font-weight:600;font-size:11.5px;color:var(--text-light);">Review Status</label>
+            <select id="csnap-exp-review-status" class="form-input" style="width:100%;height:38px;" onchange="updateCsnapExpPreviewCount()">
+              <option value="all">All Reviews</option>
+              <option value="reviewed">Reviewed Only</option>
+              <option value="pending">Pending Review Only</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="field-label" style="font-weight:600;font-size:11.5px;color:var(--text-light);">Satisfaction</label>
+            <select id="csnap-exp-satisfaction" class="form-input" style="width:100%;height:38px;" onchange="updateCsnapExpPreviewCount()">
+              <option value="all">All Ratings</option>
+              <option value="satisfied">Satisfied Only</option>
+              <option value="not_satisfied">Not Satisfied Only</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Record count preview hint -->
+        <div id="csnap-exp-preview-count" style="font-size:12.5px;color:var(--text);font-weight:600;padding:8px 12px;background:var(--slate-soft);border-radius:8px;border:1px solid var(--border);">
+          Calculating matching records…
+        </div>
+
+      </div>
+
+      <div class="modal-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;border-top:1px solid var(--border);padding-top:14px;">
+        <button class="btn btn-ghost" onclick="closeCsnapExportModal()">Cancel</button>
+        <button class="btn btn-primary" id="csnap-exp-download-btn" onclick="executeCsnapExport()" style="display:inline-flex;align-items:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Download CSV</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="snap-detail-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeSnapDetailModal()">
   <div class="modal-box" style="max-width:640px;">
     <div class="modal-header">
@@ -4960,6 +5065,252 @@ function closeSnapDetailModal(){
   hide('snap-detail-modal');
   document.body.style.overflow = '';
 }
+
+/* ══════════════════════════════════════════════════════════
+   ── CLASSROOM OBSERVATIONS — EXPORT CSV (Filter-based) ──
+   ══════════════════════════════════════════════════════════ */
+function openCsnapExportModal(){
+  const modal = $('csnap-export-modal');
+  if(!modal) return;
+
+  // 1. Setup Month Label in dropdown
+  const monthName = csnapCalMonth.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  const monthLabel = $('csnap-exp-month-name');
+  if(monthLabel) monthLabel.textContent = monthName;
+
+  // 2. Setup College Select
+  const colSelect = $('csnap-exp-college');
+  if(sessionRole === 'manager'){
+    if(colSelect){
+      colSelect.innerHTML = `<option value="${escHTML(sessionCollege)}" selected>${escHTML(sessionCollege)}</option>`;
+      colSelect.disabled = true;
+    }
+  } else {
+    if(colSelect){
+      colSelect.disabled = false;
+      const names = collegeContacts.map(c => c.college).filter(Boolean);
+      let allowed = names;
+      if(sessionRole === 'kam'){
+        allowed = names.filter(c => collegeMatchesSession(c));
+      }
+      const uniqueSorted = [...new Set(allowed)].sort((a,b) => a.localeCompare(b));
+      colSelect.innerHTML = `<option value="all">${sessionRole === 'kam' ? 'All Assigned Colleges' : 'All Available Colleges'}</option>` +
+        uniqueSorted.map(n => `<option value="${escHTML(n)}" ${snapReviewCollege === n ? 'selected' : ''}>${escHTML(n)}</option>`).join('');
+    }
+  }
+
+  // 3. Setup Default Dates
+  const y = csnapCalMonth.getFullYear();
+  const m = String(csnapCalMonth.getMonth() + 1).padStart(2, '0');
+  const firstDay = `${y}-${m}-01`;
+  const lastDayObj = new Date(y, csnapCalMonth.getMonth() + 1, 0);
+  const lastDay = `${y}-${m}-${String(lastDayObj.getDate()).padStart(2, '0')}`;
+
+  const startInput = $('csnap-exp-start-date');
+  const endInput = $('csnap-exp-end-date');
+  if(startInput) startInput.value = firstDay;
+  if(endInput) endInput.value = lastDay;
+
+  // 4. Default filter mode
+  const modeSelect = $('csnap-exp-date-mode');
+  if(modeSelect) modeSelect.value = 'current-month';
+  onCsnapExpDateModeChange('current-month');
+
+  // 5. Reset status filters
+  if($('csnap-exp-review-status')) $('csnap-exp-review-status').value = 'all';
+  if($('csnap-exp-satisfaction')) $('csnap-exp-satisfaction').value = 'all';
+
+  updateCsnapExpPreviewCount();
+  show('csnap-export-modal');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCsnapExportModal(){
+  hide('csnap-export-modal');
+  document.body.style.overflow = '';
+}
+
+function onCsnapExpDateModeChange(mode){
+  const customBox = $('csnap-exp-custom-dates');
+  if(!customBox) return;
+  if(mode === 'custom'){
+    show(customBox);
+    customBox.style.display = 'grid';
+  } else {
+    hide(customBox);
+    customBox.style.display = 'none';
+  }
+  updateCsnapExpPreviewCount();
+}
+
+function getCsnapFilteredRecords(){
+  const dateMode = $('csnap-exp-date-mode') ? $('csnap-exp-date-mode').value : 'current-month';
+  const collegeVal = $('csnap-exp-college') ? $('csnap-exp-college').value : (sessionCollege || 'all');
+  const revVal = $('csnap-exp-review-status') ? $('csnap-exp-review-status').value : 'all';
+  const satVal = $('csnap-exp-satisfaction') ? $('csnap-exp-satisfaction').value : 'all';
+
+  const curYear = csnapCalMonth.getFullYear();
+  const curMonth = csnapCalMonth.getMonth();
+
+  const startDateStr = $('csnap-exp-start-date') ? $('csnap-exp-start-date').value : '';
+  const endDateStr = $('csnap-exp-end-date') ? $('csnap-exp-end-date').value : '';
+
+  return (classroomSnaps || []).filter(s => {
+    // 1. College filter
+    if(sessionRole === 'manager'){
+      if(s.college && s.college !== sessionCollege) return false;
+    } else {
+      if(collegeVal && collegeVal !== 'all' && s.college !== collegeVal) return false;
+      if(sessionRole === 'kam' && !collegeMatchesSession(s.college)) return false;
+    }
+
+    // 2. Date filter
+    const rawDate = s.observation_date || (s.created_at ? s.created_at.slice(0,10) : '');
+    if(dateMode === 'current-month'){
+      if(!rawDate) return false;
+      const d = new Date(rawDate);
+      if(isNaN(d.getTime()) || d.getFullYear() !== curYear || d.getMonth() !== curMonth) return false;
+    } else if(dateMode === 'custom'){
+      if(startDateStr && rawDate < startDateStr) return false;
+      if(endDateStr && rawDate > endDateStr) return false;
+    }
+
+    // 3. Review status
+    if(revVal === 'reviewed' && !s.reviewed) return false;
+    if(revVal === 'pending' && s.reviewed) return false;
+
+    // 4. Satisfaction status
+    if(satVal === 'satisfied' && s.satisfaction_status !== 'satisfied') return false;
+    if(satVal === 'not_satisfied' && s.satisfaction_status !== 'not_satisfied') return false;
+
+    return true;
+  });
+}
+
+function updateCsnapExpPreviewCount(){
+  const hint = $('csnap-exp-preview-count');
+  if(!hint) return;
+  const list = getCsnapFilteredRecords();
+  hint.textContent = `Matching observations: ${list.length}`;
+}
+
+async function executeCsnapExport(){
+  const btn = $('csnap-exp-download-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Generating…'; }
+  try{
+    const collegeVal = $('csnap-exp-college') ? $('csnap-exp-college').value : (sessionCollege || 'all');
+    
+    // If Admin/KAM selected a college not currently loaded into classroomSnaps, fetch it
+    if(sessionRole !== 'manager' && collegeVal && collegeVal !== 'all' && collegeVal !== snapReviewCollege){
+      let q = sb.from('classroom_snaps').select('*').eq('college', collegeVal).order('created_at', { ascending: false });
+      const { data, error } = await q;
+      if(!error && data) classroomSnaps = data;
+    } else if(sessionRole !== 'manager' && collegeVal === 'all' && snapReviewCollege){
+      let q = sb.from('classroom_snaps').select('*').order('created_at', { ascending: false });
+      const { data, error } = await q;
+      if(!error && data){
+        let rows = data;
+        if(sessionRole === 'kam') rows = rows.filter(r => collegeMatchesSession(r.college));
+        classroomSnaps = rows;
+      }
+    }
+
+    const records = getCsnapFilteredRecords();
+    if(!records.length){
+      showToast('No observation logs match the selected filters');
+      return;
+    }
+
+    function escCSV(v){
+      if(v === null || v === undefined) return '""';
+      const s = String(v);
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+
+    const headers = [
+      'Record ID',
+      'College',
+      'Campus Manager',
+      'Observation Date',
+      'Logged At',
+      'Department / Class',
+      'Mentor Name',
+      'Course Type',
+      'Course Name / Subject',
+      'Professionalism (1-5)',
+      'Class Handling (1-5)',
+      'Skill Development (1-5)',
+      'Student Engagement (1-5)',
+      'Tasks & Follow-up (1-5)',
+      'Session Plan Adherence (1-5)',
+      'Study Material Sharing (1-5)',
+      'Overall Rating',
+      'Satisfaction Status',
+      'Satisfaction Remarks / Notes',
+      'Review Status',
+      'Reviewed By',
+      'Reviewed At',
+      'Photo URL',
+      'Latitude',
+      'Longitude',
+      'Location Accuracy (m)'
+    ];
+
+    const csvRows = [headers.map(escCSV).join(',')];
+
+    records.forEach(s => {
+      csvRows.push([
+        escCSV(s.id),
+        escCSV(s.college),
+        escCSV(s.manager_name),
+        escCSV(s.observation_date || ''),
+        escCSV(s.created_at ? new Date(s.created_at).toISOString() : ''),
+        escCSV(s.department || s.class_name || ''),
+        escCSV(s.teacher_name || s.mentor_name || ''),
+        escCSV(s.course_type || ''),
+        escCSV(s.course_name || s.subject || ''),
+        escCSV(s.rating_professionalism || ''),
+        escCSV(s.rating_class_handling || ''),
+        escCSV(s.rating_skill_development || ''),
+        escCSV(s.rating_student_engagement || ''),
+        escCSV(s.rating_tasks_followup || ''),
+        escCSV(s.rating_session_plan_adherence || ''),
+        escCSV(s.rating_study_material_sharing || ''),
+        escCSV(s.overall_rating || ''),
+        escCSV(s.satisfaction_status || ''),
+        escCSV(s.satisfaction_remarks || s.notes || s.comments || ''),
+        escCSV(s.reviewed ? 'Reviewed' : 'Pending'),
+        escCSV(s.reviewed_by || ''),
+        escCSV(s.reviewed_at ? new Date(s.reviewed_at).toISOString() : ''),
+        escCSV(s.photo_url || ''),
+        escCSV(s.photo_lat || ''),
+        escCSV(s.photo_lng || ''),
+        escCSV(s.photo_location_accuracy || '')
+      ].join(','));
+    });
+
+    const blob = new Blob(['\uFEFF' + csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const colSlug = (sessionCollege || (collegeVal !== 'all' ? collegeVal : 'All_Campuses')).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const dateSlug = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `Classroom_Observations_${colSlug}_${dateSlug}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    closeCsnapExportModal();
+    showToast(`✓ Exported ${records.length} classroom observation${records.length===1?'':'s'} to CSV`);
+  } catch(err){
+    console.error('Export failed', err);
+    showToast('Export failed: ' + (err.message || 'check console'));
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = '📥 Download CSV'; }
+  }
+}
+
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && $('snap-detail-modal') && !$('snap-detail-modal').classList.contains('hidden')){
     closeSnapDetailModal();
