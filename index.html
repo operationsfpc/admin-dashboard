@@ -1936,7 +1936,7 @@ body[data-theme="dark"] .dlog-topbar {
   <div class="dlog-topbar">
     <div class="breadcrumb">Daily Activity Log / <b id="dlog-college-name-crumb">—</b></div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn btn-ghost" onclick="openCsnapExportModal()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);font-weight:600;">
+      <button class="btn btn-ghost" onclick="exportDailyLogsCSV()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);font-weight:600;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span>Export CSV</span>
       </button>
@@ -2257,7 +2257,7 @@ body[data-theme="dark"] .dlog-topbar {
   <div class="dlog-topbar">
     <div class="breadcrumb">Monthly Report Monitor / <b id="rm-breadcrumb-college">—</b></div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn btn-ghost" onclick="openCsnapExportModal()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);font-weight:600;">
+      <button class="btn btn-ghost" onclick="exportMonthlyReportsCSV()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);font-weight:600;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span>Export CSV</span>
       </button>
@@ -2340,7 +2340,7 @@ body[data-theme="dark"] .dlog-topbar {
   <div class="dlog-topbar">
     <div class="breadcrumb">Review Panel / <b id="review-college-name">—</b></div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn btn-ghost" onclick="openCsnapExportModal()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);font-weight:600;">
+      <button class="btn btn-ghost" onclick="exportReviewLogsCSV()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);font-weight:600;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span>Export CSV</span>
       </button>
@@ -2728,6 +2728,10 @@ body[data-theme="dark"] .dlog-topbar {
           </button>
           <button class="btn btn-ghost btn-icon" onclick="toggleInsights()" title="Toggle insights">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 13.5V9M6 13.5V5M10 13.5V7.5M14 13.5V2.5"/></svg>
+          </button>
+          <button class="btn btn-ghost" onclick="exportCSV()" title="Export tickets to CSV" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);padding:6px 12px;border-radius:8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Export CSV</span>
           </button>
           <button class="btn btn-ghost" id="refresh-btn" onclick="loadTickets(true)" title="Refresh">
             <svg id="refresh-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 2.5A6.5 6.5 0 1 1 8 1.5"/><polyline points="13.5,2.5 13.5,6 10,6"/></svg>
@@ -4259,28 +4263,259 @@ function updateKbdFocus(cards){
   const c = cards[kbdFocusIdx];
   if(c){ c.classList.add('kbd-focus'); c.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 }
+/* ══════════════════════════════════════════════════════════
+   ── UNIVERSAL CSV EXPORT HELPERS & PER-DASHBOARD EXPORTS ──
+   ══════════════════════════════════════════════════════════ */
+function downloadCSV(csvContent, filename){
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function csvEscape(val){
+  if(val === null || val === undefined) return '""';
+  let str = String(val);
+  return '"' + str.replace(/"/g, '""') + '"';
+}
+
+/* ── 1. TICKETING DASHBOARD EXPORT ── */
 function exportCSV(){
   const list = window._filteredCache || tickets;
-  if(!list.length){ showToast('No tickets to export'); return; }
+  if(!list || !list.length){ showToast('No tickets to export'); return; }
   const cols = ['roll_number','student_name','college','category','subject','status','priority','reviewed','created_at','closed_by','closed_at'];
-  const rows = [cols.join(',')];
+  const headers = ['Roll Number','Student Name','College','Category','Subject','Status','Priority','Review Status','Created At','Resolved By','Resolved At'];
+  const rows = [headers.map(csvEscape).join(',')];
   list.forEach(t => {
     const row = cols.map(c => {
       let v = c === 'priority' ? getPriority(t) : t[c];
-      v = (v === null || v === undefined) ? '' : String(v);
-      if(v.includes(',') || v.includes('"') || v.includes('\n')) v = '"' + v.replace(/"/g,'""') + '"';
-      return v;
+      if((c === 'created_at' || c === 'closed_at') && v) v = fmtAbs(v);
+      if(c === 'reviewed') v = t.reviewed ? 'Reviewed' : 'Pending';
+      return csvEscape(v);
     });
     rows.push(row.join(','));
   });
-  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `facePrep-tickets-${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-  showToast('CSV exported');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  downloadCSV(rows.join('\r\n'), `facePrep-tickets-${dateStr}.csv`);
+  showToast(`Exported ${list.length} tickets to CSV`);
 }
+
+/* ── 2. DAILY ACTIVITY LOG EXPORT ── */
+async function exportDailyLogsCSV(){
+  showToast('Preparing daily activity logs export…');
+  try{
+    const college = sessionCollege || '';
+    let q = sb.from('daily_logs').select('*');
+    if(college){
+      q = q.eq('college', college);
+    }
+    const { data, error } = await q.order('log_date', { ascending: false }).order('created_at', { ascending: false });
+    if(error) throw error;
+    if(!data || !data.length){
+      showToast('No daily activity logs found to export');
+      return;
+    }
+    const headers = [
+      'Log Date',
+      'College',
+      'Campus Manager',
+      'Category',
+      'Call Type',
+      'Activity Details',
+      'Progress Notes',
+      'Review Status',
+      'Reviewed By',
+      'Reviewed At',
+      'Created At'
+    ];
+    const rows = [headers.map(csvEscape).join(',')];
+    data.forEach(l => {
+      const catObj = (typeof DLOG_CATEGORIES !== 'undefined') ? DLOG_CATEGORIES.find(c => c.key === l.category) : null;
+      const catLabel = catObj ? catObj.label : (l.category || '');
+      const callTypeLabel = l.call_type === 'hard' ? 'Hard Call' : (l.call_type === 'soft' ? 'Soft Call' : (l.call_type || ''));
+      const row = [
+        l.log_date || '',
+        l.college || '',
+        l.manager_name || '',
+        catLabel,
+        callTypeLabel,
+        l.activity || '',
+        l.progress_notes || '',
+        l.reviewed ? 'Reviewed' : 'Pending',
+        l.reviewed_by || '',
+        l.reviewed_at ? fmtAbs(l.reviewed_at) : '',
+        l.created_at ? fmtAbs(l.created_at) : ''
+      ];
+      rows.push(row.map(csvEscape).join(','));
+    });
+    const cleanCollege = (college || 'All').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    downloadCSV(rows.join('\r\n'), `Daily_Activity_Logs_${cleanCollege}_${dateStr}.csv`);
+    showToast(`Exported ${data.length} daily logs to CSV`);
+  }catch(e){
+    console.error('Failed to export daily logs:', e);
+    showToast('Failed to export daily logs: ' + (e.message || 'check console'));
+  }
+}
+
+/* ── 3. REVIEW PANEL LOGS EXPORT ── */
+async function exportReviewLogsCSV(){
+  showToast('Preparing review logs export…');
+  try{
+    const college = reviewCollege || '';
+    let list = [];
+    if(typeof getReviewFiltered === 'function'){
+      list = getReviewFiltered();
+    }
+    if(!list || !list.length){
+      if(reviewLogs && reviewLogs.length){
+        list = reviewLogs;
+      } else {
+        let q = sb.from('daily_logs').select('*');
+        if(college) q = q.eq('college', college);
+        const { data, error } = await q.order('log_date', { ascending: false }).order('created_at', { ascending: false });
+        if(error) throw error;
+        list = data || [];
+      }
+    }
+    if(!list.length){
+      showToast('No logs found for current review selection');
+      return;
+    }
+    const headers = [
+      'Log Date',
+      'College',
+      'Campus Manager',
+      'Category',
+      'Call Type',
+      'Activity Details',
+      'Progress Notes',
+      'Review Status',
+      'Reviewed By',
+      'Reviewed At',
+      'Created At'
+    ];
+    const rows = [headers.map(csvEscape).join(',')];
+    list.forEach(l => {
+      const catObj = (typeof DLOG_CATEGORIES !== 'undefined') ? DLOG_CATEGORIES.find(c => c.key === l.category) : null;
+      const catLabel = catObj ? catObj.label : (l.category || '');
+      const callTypeLabel = l.call_type === 'hard' ? 'Hard Call' : (l.call_type === 'soft' ? 'Soft Call' : (l.call_type || ''));
+      const row = [
+        l.log_date || '',
+        l.college || '',
+        l.manager_name || '',
+        catLabel,
+        callTypeLabel,
+        l.activity || '',
+        l.progress_notes || '',
+        l.reviewed ? 'Reviewed' : 'Pending',
+        l.reviewed_by || '',
+        l.reviewed_at ? fmtAbs(l.reviewed_at) : '',
+        l.created_at ? fmtAbs(l.created_at) : ''
+      ];
+      rows.push(row.map(csvEscape).join(','));
+    });
+    const cleanCollege = (college || 'All').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filterTag = (typeof reviewCallFilter !== 'undefined' && reviewCallFilter !== 'all') ? `_${reviewCallFilter}` : '';
+    const dateStr = new Date().toISOString().slice(0, 10);
+    downloadCSV(rows.join('\r\n'), `Review_Logs_${cleanCollege}${filterTag}_${dateStr}.csv`);
+    showToast(`Exported ${list.length} review log entries to CSV`);
+  }catch(e){
+    console.error('Failed to export review logs:', e);
+    showToast('Failed to export review logs: ' + (e.message || 'check console'));
+  }
+}
+
+/* ── 4. MONTHLY REPORT MONITOR EXPORT ── */
+async function exportMonthlyReportsCSV(){
+  showToast('Preparing monthly reports export…');
+  try{
+    let q = sb.from('report_approvals').select('*');
+    let scopeName = '';
+    if(sessionRole === 'manager' && sessionCollege){
+      q = q.eq('college', sessionCollege);
+      scopeName = sessionCollege;
+    } else if(reportMonitorCollege){
+      q = q.eq('college', reportMonitorCollege);
+      scopeName = reportMonitorCollege;
+    } else if(reportMonitorMonth){
+      q = q.eq('report_month', reportMonitorMonth);
+      scopeName = reportMonitorMonth;
+    }
+    const { data, error } = await q.order('report_month', { ascending: false }).order('college', { ascending: true });
+    if(error) throw error;
+    if(!data || !data.length){
+      showToast('No monthly report records found to export');
+      return;
+    }
+    const headers = [
+      'College',
+      'Report Month',
+      'Stage',
+      'Stage Description',
+      'Revision',
+      'KAM Sheet Link',
+      'Sheet Shared By',
+      'Sheet Shared At',
+      'Arun Shared Status',
+      'Arun Shared By',
+      'Arun Shared At',
+      'Report URL',
+      'Sent By',
+      'Sent At',
+      'Decision',
+      'Decided By',
+      'Decided At',
+      'Shared with Stakeholder',
+      'Shared By',
+      'Shared At',
+      'Proof Document URL',
+      'Last Updated'
+    ];
+    const rows = [headers.map(csvEscape).join(',')];
+    data.forEach(r => {
+      const stageDesc = (typeof rmStepShortLabel === 'function') ? rmStepShortLabel(r.stage, r.revision) : `Stage ${r.stage || 1}`;
+      const row = [
+        r.college || '',
+        r.report_month || '',
+        r.stage || 1,
+        stageDesc,
+        r.revision || 1,
+        r.kam_sheet_link || '',
+        r.sheet_shared_by || '',
+        r.sheet_shared_at ? fmtAbs(r.sheet_shared_at) : '',
+        r.arun_shared ? 'Yes' : 'No',
+        r.arun_shared_by || '',
+        r.arun_shared_at ? fmtAbs(r.arun_shared_at) : '',
+        r.report_url || '',
+        r.sent_by || '',
+        r.sent_at ? fmtAbs(r.sent_at) : '',
+        r.decision || '',
+        r.decided_by || '',
+        r.decided_at ? fmtAbs(r.decided_at) : '',
+        r.shared ? 'Shared' : 'Pending',
+        r.shared_by || '',
+        r.shared_at ? fmtAbs(r.shared_at) : '',
+        r.shared_proof_url || '',
+        r.updated_at ? fmtAbs(r.updated_at) : ''
+      ];
+      rows.push(row.map(csvEscape).join(','));
+    });
+    const cleanScope = (scopeName || 'All').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    downloadCSV(rows.join('\r\n'), `Monthly_Reports_${cleanScope}_${dateStr}.csv`);
+    showToast(`Exported ${data.length} monthly report records to CSV`);
+  }catch(e){
+    console.error('Failed to export monthly reports:', e);
+    showToast('Failed to export monthly reports: ' + (e.message || 'check console'));
+  }
+}
+
 function buildTimeline(t){
   const items = [];
   items.push({ label: 'Ticket created', time: t.created_at, done: true });
