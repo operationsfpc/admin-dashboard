@@ -3166,9 +3166,9 @@ function isClassroomSnapAllowedForSession(){
 }
 
  
-const $  = id => document.getElementById(id);
-const show = id => $(id).classList.remove('hidden');
-const hide = id => $(id).classList.add('hidden');
+const $  = id => (typeof id === 'string') ? document.getElementById(id) : id;
+const show = x => { const el = (typeof x === 'string') ? document.getElementById(x) : x; if(el && el.classList) el.classList.remove('hidden'); };
+const hide = x => { const el = (typeof x === 'string') ? document.getElementById(x) : x; if(el && el.classList) el.classList.add('hidden'); };
 function escHTML(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtRel(iso){
   const diff = Date.now() - new Date(iso).getTime();
@@ -5134,10 +5134,10 @@ function onCsnapExpDateModeChange(mode){
   const customBox = $('csnap-exp-custom-dates');
   if(!customBox) return;
   if(mode === 'custom'){
-    show(customBox);
+    customBox.classList.remove('hidden');
     customBox.style.display = 'grid';
   } else {
-    hide(customBox);
+    customBox.classList.add('hidden');
     customBox.style.display = 'none';
   }
   updateCsnapExpPreviewCount();
