@@ -2938,6 +2938,203 @@ body[data-theme="dark"] .dlog-topbar {
 const SUPABASE_URL     = 'https://scuvqabxqqtvibjutoyj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_wptvdh6rVvEy2uSppa4Ckw_ozPuC6L4';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ── Direct Brevo Email Integration (Preserving exact same old method) ── */
+const BREVO_CONFIG = {
+  apiKey: atob('eGtleXNpYi1jYzNhMjIyNzRkYjBiMmYyMTY3MDlkMjhjZGExZTg3NjIxNGY0NWM1ZTI3ZGJhZGQyNzRhODBjNTdmZTljMGEyLURKUFpEem1uNWZwMDRYRFk='),
+  senderName: 'FACE Prep E-Campus',
+  senderEmail: 'thanush@faceprep.in',
+  defaultCc: 'arun.senthil@faceprep.in',
+  escalationEmail: 'escalations@faceprepcampus.in'
+};
+
+const _origFunctionsInvoke = sb.functions.invoke.bind(sb.functions);
+sb.functions.invoke = async function(functionName, options) {
+  try {
+    const data = options?.body || {};
+    if (functionName === 'report-flow-notify') {
+      const { step, college, reportMonth, to, cc, by, link, reportUrl, revision, remark, shared, proofUrl } = data;
+      
+      const normEmails = (val) => {
+        if (!val) return [];
+        const arr = Array.isArray(val) ? val : [val];
+        return arr.map(e => String(e).trim()).filter(e => e && e.includes('@'));
+      };
+
+      const toEmails = normEmails(to);
+      if (!toEmails.length) toEmails.push('thanush@faceprep.in');
+      
+      const ccEmails = normEmails(cc);
+      if (BREVO_CONFIG.defaultCc && !ccEmails.includes(BREVO_CONFIG.defaultCc) && !toEmails.includes(BREVO_CONFIG.defaultCc)) {
+        ccEmails.push(BREVO_CONFIG.defaultCc);
+      }
+
+      let subject = `[Monthly Report] Update — ${college || 'Campus'} (${reportMonth || 'Current'})`;
+      let stepTitle = 'Report Workflow Update';
+      let stepBadge = '#3457E8';
+      let detailsHtml = '';
+
+      switch (step) {
+        case 'sheet_shared':
+          subject = `[Monthly Report] Spreadsheet Link Shared — ${college} (${reportMonth})`;
+          stepTitle = 'Monthly Data Sheet Shared';
+          detailsHtml = `
+            <p style="margin:8px 0;"><strong>Action By:</strong> ${by || 'Admin / KAM'}</p>
+            <p style="margin:8px 0;"><strong>College:</strong> ${college}</p>
+            <p style="margin:8px 0;"><strong>Report Month:</strong> ${reportMonth}</p>
+            ${link ? `<p style="margin:16px 0;"><a href="${link}" style="display:inline-block;background:#3457E8;color:#ffffff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;">Open Monthly Spreadsheet</a></p>` : ''}
+          `;
+          break;
+        case 'arun_shared':
+          subject = `[Monthly Report] Arun Senthil Status: ${shared ? 'Shared' : 'Pending'} — ${college} (${reportMonth})`;
+          stepTitle = shared ? 'Shared with Arun Senthil' : 'Arun Senthil Sharing Pending';
+          stepBadge = shared ? '#16A34A' : '#D9840C';
+          detailsHtml = `
+            <p style="margin:8px 0;"><strong>Updated By:</strong> ${by || 'Manager'}</p>
+            <p style="margin:8px 0;"><strong>Status:</strong> ${shared ? 'Successfully shared with Arun Senthil' : 'Marked not yet shared'}</p>
+            <p style="margin:8px 0;"><strong>College:</strong> ${college}</p>
+            <p style="margin:8px 0;"><strong>Report Month:</strong> ${reportMonth}</p>
+          `;
+          break;
+        case 'report_sent':
+          subject = `[Monthly Report] Review Requested (Rev ${revision || 1}) — ${college} (${reportMonth})`;
+          stepTitle = `Report Submitted for KAM Review (Revision ${revision || 1})`;
+          stepBadge = '#7C3AED';
+          detailsHtml = `
+            <p style="margin:8px 0;"><strong>Submitted By:</strong> ${by || 'Campus Manager'}</p>
+            <p style="margin:8px 0;"><strong>College:</strong> ${college}</p>
+            <p style="margin:8px 0;"><strong>Report Month:</strong> ${reportMonth}</p>
+            ${reportUrl ? `<p style="margin:16px 0;"><a href="${reportUrl}" style="display:inline-block;background:#7C3AED;color:#ffffff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;">Download / View Monthly Report PPTX</a></p>` : ''}
+          `;
+          break;
+        case 'report_approved':
+          subject = `[Monthly Report] Approved by KAM — ${college} (${reportMonth})`;
+          stepTitle = 'Monthly Report Approved';
+          stepBadge = '#16A34A';
+          detailsHtml = `
+            <p style="margin:8px 0;"><strong>Approved By:</strong> ${by || 'KAM'}</p>
+            <p style="margin:8px 0;"><strong>College:</strong> ${college}</p>
+            <p style="margin:8px 0;"><strong>Report Month:</strong> ${reportMonth}</p>
+            <p style="margin:8px 0;color:#16A34A;font-weight:600;">✓ The report has been approved and is ready to be shared with college stakeholders.</p>
+          `;
+          break;
+        case 'report_rejected':
+          subject = `[Monthly Report] Changes Requested (Rev ${revision || 1}) — ${college} (${reportMonth})`;
+          stepTitle = 'Report Sent Back for Revisions';
+          stepBadge = '#DC2626';
+          detailsHtml = `
+            <p style="margin:8px 0;"><strong>Reviewed By:</strong> ${by || 'KAM'}</p>
+            <p style="margin:8px 0;"><strong>College:</strong> ${college}</p>
+            <p style="margin:8px 0;"><strong>Remarks:</strong> <span style="background:#FDECEC;color:#DC2626;padding:4px 8px;border-radius:4px;display:inline-block;font-weight:600;">${remark || 'Please review and update the report'}</span></p>
+          `;
+          break;
+        case 'shared_with_stakeholder':
+          subject = `[Monthly Report] Successfully Presented to Stakeholders — ${college} (${reportMonth})`;
+          stepTitle = 'Report Shared with College Stakeholders';
+          stepBadge = '#16A34A';
+          detailsHtml = `
+            <p style="margin:8px 0;"><strong>Shared By:</strong> ${by || 'Campus Manager'}</p>
+            <p style="margin:8px 0;"><strong>College:</strong> ${college}</p>
+            <p style="margin:8px 0;"><strong>Report Month:</strong> ${reportMonth}</p>
+            ${proofUrl ? `<p style="margin:16px 0;"><a href="${proofUrl}" style="display:inline-block;background:#16A34A;color:#ffffff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;">View Presentation Proof Image</a></p>` : ''}
+          `;
+          break;
+      }
+
+      const htmlContent = `
+        <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.06);">
+          <div style="background:${stepBadge};color:#ffffff;padding:24px 28px;">
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.9;font-weight:700;margin-bottom:4px;">FACE Prep Campus — Operations Flow</div>
+            <h2 style="margin:0;font-size:20px;font-weight:700;color:#ffffff;">${stepTitle}</h2>
+          </div>
+          <div style="padding:28px;color:#1E293B;font-size:14px;line-height:1.6;">
+            ${detailsHtml}
+            <div style="margin-top:28px;padding-top:16px;border-top:1px solid #E2E8F0;font-size:12px;color:#64748B;">
+              <p style="margin:0;">Dispatched automatically via <strong>FACE Prep E-Campus</strong></p>
+              <p style="margin:4px 0 0;">Timestamp: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'api-key': BREVO_CONFIG.apiKey
+          },
+          body: JSON.stringify({
+            sender: { name: BREVO_CONFIG.senderName, email: BREVO_CONFIG.senderEmail },
+            to: toEmails.map(email => ({ email })),
+            cc: ccEmails.map(email => ({ email })),
+            subject,
+            htmlContent
+          })
+        });
+
+      const resData = await res.json();
+      console.log('📧 Brevo direct email dispatched:', resData);
+      return { data: resData, error: null };
+    }
+
+    if (functionName === 'notify-not-satisfied') {
+      const { college, teacher, department, courseName, overallRating, manager, remarks, observationDate, recipientEmail } = data;
+      const toEmails = recipientEmail ? [recipientEmail] : [BREVO_CONFIG.escalationEmail || 'thanush@faceprep.in'];
+      const ccEmails = [BREVO_CONFIG.defaultCc, 'thanush@faceprep.in'].filter(Boolean);
+
+      const htmlContent = `
+        <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #FCA5A5;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(220,38,38,0.08);">
+          <div style="background:#DC2626;color:#ffffff;padding:24px 28px;">
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.9;font-weight:700;margin-bottom:4px;">Classroom Observation Escalation</div>
+            <h2 style="margin:0;font-size:20px;font-weight:700;color:#ffffff;">Session Marked "Not Satisfied"</h2>
+          </div>
+          <div style="padding:28px;color:#1E293B;font-size:14px;line-height:1.6;">
+            <p style="margin:8px 0;"><strong>College:</strong> ${college || '—'}</p>
+            <p style="margin:8px 0;"><strong>Trainer / Mentor:</strong> ${teacher || '—'}</p>
+            <p style="margin:8px 0;"><strong>Department:</strong> ${department || '—'} | <strong>Course:</strong> ${courseName || '—'}</p>
+            <p style="margin:8px 0;"><strong>Overall Rating:</strong> <span style="color:#DC2626;font-weight:700;">${overallRating || '—'} / 5</span></p>
+            <p style="margin:8px 0;"><strong>Observer:</strong> ${manager || '—'}</p>
+            <p style="margin:8px 0;"><strong>Date:</strong> ${observationDate || new Date().toLocaleDateString('en-IN')}</p>
+            <div style="margin-top:16px;background:#FDECEC;border-left:4px solid #DC2626;padding:12px 16px;border-radius:4px;">
+              <strong>Remarks:</strong>
+              <p style="margin:6px 0 0;color:#991B1B;">${remarks || 'No remarks provided'}</p>
+            </div>
+            <div style="margin-top:28px;padding-top:16px;border-top:1px solid #E2E8F0;font-size:12px;color:#64748B;">
+              <p style="margin:0;">Dispatched automatically via <strong>FACE Prep E-Campus</strong></p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'api-key': BREVO_CONFIG.apiKey
+        },
+        body: JSON.stringify({
+          sender: { name: BREVO_CONFIG.senderName, email: BREVO_CONFIG.senderEmail },
+          to: toEmails.map(email => ({ email })),
+          cc: ccEmails.map(email => ({ email })),
+          subject: `[Classroom Observation Alert] Not Satisfied — ${college} (${teacher})`,
+          htmlContent
+        })
+      });
+
+      const resData = await res.json();
+      console.log('📧 Brevo observation alert dispatched:', resData);
+      return { data: resData, error: null };
+    }
+
+    return _origFunctionsInvoke(functionName, options);
+  } catch (err) {
+    console.error('Brevo dispatcher exception:', err);
+    return { data: null, error: err };
+  }
+};
+
 const ADMIN_PIN = '1212';
 function applyUIScale(){
   const baseWidth = 1536;
