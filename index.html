@@ -7663,12 +7663,20 @@
             })
           });
 
-          const resData = await res.json();
+          const resData = await res.json().catch(() => ({}));
           console.log('📧 Brevo ticket status email dispatched:', resData);
           return { data: resData, error: null };
         }
 
-        return _origFunctionsInvoke(functionName, options);
+        if (typeof _origFunctionsInvoke === 'function') {
+          try {
+            return await _origFunctionsInvoke(functionName, options);
+          } catch (invErr) {
+            console.warn(`Supabase function '${functionName}' fallback warning:`, invErr);
+            return { data: null, error: invErr };
+          }
+        }
+        return { data: null, error: new Error('Function not handled: ' + functionName) };
       } catch (err) {
         console.error('Brevo dispatcher exception:', err);
         return { data: null, error: err };
