@@ -7044,45 +7044,55 @@
                   </svg>
                   Student Portal
                 </a>
-
-
-                <div class="search-wrap">
-                  <span class="search-icon">⌕</span>
-                  <input id="search-input" type="text" placeholder="Search roll no., name, college"
-                    oninput="renderTickets()" />
-                </div>
-                <button class="btn btn-ghost hidden" id="topbar-switch-platform" onclick="backToPlatformSelect()"
-                  title="Switch platform">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-                    <path d="M3 8h10M9 4l4 4-4 4" />
+                <a href="insights.html" class="btn btn-ghost" onclick="openExternalPortal('insights'); return false;"
+                  style="text-decoration:none;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;"
+                  title="Open Executive Insights Heatmap">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M3 9h18" />
+                    <path d="M9 21V9" />
                   </svg>
-                  Switch platform
-                </button>
-                <button class="btn btn-ghost btn-icon" onclick="toggleInsights()" title="Toggle insights">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-                    <path d="M2 13.5V9M6 13.5V5M10 13.5V7.5M14 13.5V2.5" />
-                  </svg>
-                </button>
-                <button class="btn btn-ghost" onclick="exportCSV()" title="Export tickets to CSV"
-                  style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);padding:6px 12px;border-radius:8px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  <span>Export CSV</span>
-                </button>
-                <button class="btn btn-ghost" id="refresh-btn" onclick="loadTickets(true)" title="Refresh">
-                  <svg id="refresh-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                    stroke-width="1.5">
-                    <path d="M13.5 2.5A6.5 6.5 0 1 1 8 1.5" />
-                    <polyline points="13.5,2.5 13.5,6 10,6" />
-                  </svg>
-                  Refresh
-                </button>
+                  Insights Deck
+                </a>
               </div>
+
+              <div class="search-wrap">
+                <span class="search-icon">⌕</span>
+                <input id="search-input" type="text" placeholder="Search roll no., name, college"
+                  oninput="renderTickets()" />
+              </div>
+              <button class="btn btn-ghost hidden" id="topbar-switch-platform" onclick="backToPlatformSelect()"
+                title="Switch platform">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <path d="M3 8h10M9 4l4 4-4 4" />
+                </svg>
+                Switch platform
+              </button>
+              <button class="btn btn-ghost btn-icon" onclick="toggleInsights()" title="Toggle insights">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <path d="M2 13.5V9M6 13.5V5M10 13.5V7.5M14 13.5V2.5" />
+                </svg>
+              </button>
+              <button class="btn btn-ghost" onclick="exportCSV()" title="Export tickets to CSV"
+                style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);padding:6px 12px;border-radius:8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span>Export CSV</span>
+              </button>
+              <button class="btn btn-ghost" id="refresh-btn" onclick="loadTickets(true)" title="Refresh">
+                <svg id="refresh-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                  stroke-width="1.5">
+                  <path d="M13.5 2.5A6.5 6.5 0 1 1 8 1.5" />
+                  <polyline points="13.5,2.5 13.5,6 10,6" />
+                </svg>
+                Refresh
+              </button>
             </div>
+          </div>
             <div class="page-body">
               <div class="insights-panel hidden" id="insights-panel">
                 <div class="insight-block">
