@@ -7545,7 +7545,7 @@
 
           if (functionName === 'notify-hardcall') {
             const { college, category_label, log_date, manager_name, activity, progress_notes } = data;
-            const rec = collegeContacts.find(c => c.college === college);
+            const rec = collegeContacts.find(c => c?.college && college && c.college.trim().toLowerCase() === college.trim().toLowerCase()) || collegeContacts.find(c => c.college === college);
             const toEmails = [];
             if (rec?.senior_manager_email && rec.senior_manager_email.includes('@')) toEmails.push(rec.senior_manager_email.trim());
             if (!toEmails.length) toEmails.push(BREVO_CONFIG.escalationEmail || 'thanush@faceprep.in');
@@ -7607,7 +7607,7 @@
 
           if (functionName === 'notify-ticket-status') {
             const { ticketId, studentName, rollNumber, college, category, subject, status, adminNote, closedBy } = data;
-            const rec = collegeContacts.find(c => c.college === college);
+            const rec = collegeContacts.find(c => c?.college && college && c.college.trim().toLowerCase() === college.trim().toLowerCase()) || collegeContacts.find(c => c.college === college);
             const toEmails = [];
             if (rec?.campus_manager_email && rec.campus_manager_email.includes('@')) toEmails.push(rec.campus_manager_email.trim());
             if (rec?.senior_manager_email && rec.senior_manager_email.includes('@') && !toEmails.includes(rec.senior_manager_email.trim())) toEmails.push(rec.senior_manager_email.trim());
