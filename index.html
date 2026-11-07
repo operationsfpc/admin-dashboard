@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FACE Prep Campus Help Desk — Admin Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"></script>
   <style>
@@ -7343,6 +7343,7 @@
       const SUPABASE_URL = 'https://scuvqabxqqtvibjutoyj.supabase.co';
       const SUPABASE_ANON_KEY = 'sb_publishable_wptvdh6rVvEy2uSppa4Ckw_ozPuC6L4';
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      try { const _fnClient = sb.functions; Object.defineProperty(sb, 'functions', { get: () => _fnClient }); } catch (e) { console.error('Could not pin sb.functions:', e); }
 
       /* ── Direct Brevo Email Integration (Preserving exact same old method) ── */
       const BREVO_CONFIG = {
@@ -7357,12 +7358,11 @@
       function getAllKamEmails() {
         const emails = new Set();
         (collegeContacts || []).forEach(c => {
-          if (c.senior_manager_email && c.senior_manager_email.includes('@')) {
-            emails.add(c.senior_manager_email.trim().toLowerCase());
-          }
+          splitEmails(c.senior_manager_email).forEach(e => emails.add(e.toLowerCase()));
         });
         return [...emails];
       }
+      const splitEmails = (val) => { const seen = new Set(); return (Array.isArray(val) ? val : [val]).flatMap(v => String(v || '').split(',')).map(e => e.trim()).filter(e => /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(e) && !seen.has(e.toLowerCase()) && seen.add(e.toLowerCase())); };
       function buildFullCc() {
         const set = new Set();
         if (BREVO_CONFIG.defaultCc) set.add(BREVO_CONFIG.defaultCc.toLowerCase());
@@ -7381,7 +7381,7 @@
             const normEmails = (val) => {
               if (!val) return [];
               const arr = Array.isArray(val) ? val : [val];
-              return arr.map(e => String(e).trim()).filter(e => e && e.includes('@'));
+              return splitEmails(arr);
             };
 
             const toEmails = normEmails(to);
@@ -7501,6 +7501,11 @@
               })
             });
 
+            if (!res.ok) {
+              const errText = await res.text().catch(() => '');
+              console.error('📧 Brevo rejected email (report-flow-notify): HTTP ' + res.status, errText);
+              return { data: null, error: new Error('Brevo HTTP ' + res.status + ': ' + errText) };
+            }
             const resData = await res.json();
             console.log('📧 Brevo direct email dispatched:', resData);
             return { data: resData, error: null };
@@ -7508,7 +7513,7 @@
 
           if (functionName === 'notify-not-satisfied') {
             const { college, teacher, department, courseName, overallRating, manager, remarks, observationDate, recipientEmail } = data;
-            const toEmails = recipientEmail ? [recipientEmail] : [BREVO_CONFIG.escalationEmail || 'thanush@faceprep.in'];
+            const toEmails = splitEmails(recipientEmail).length ? splitEmails(recipientEmail) : [BREVO_CONFIG.escalationEmail || 'thanush@faceprep.in'];
             const fullCc = buildFullCc();
             fullCc.push('thanush@faceprep.in');
             const ccEmails = [...new Set(fullCc)].filter(e => !toEmails.map(t => t.toLowerCase()).includes(e.toLowerCase()));
@@ -7557,6 +7562,11 @@
               })
             });
 
+            if (!res.ok) {
+              const errText = await res.text().catch(() => '');
+              console.error('📧 Brevo rejected email (notify-not-satisfied): HTTP ' + res.status, errText);
+              return { data: null, error: new Error('Brevo HTTP ' + res.status + ': ' + errText) };
+            }
             const resData = await res.json();
             console.log('📧 Brevo observation alert dispatched:', resData);
             return { data: resData, error: null };
@@ -7566,12 +7576,12 @@
             const { college, category_label, log_date, manager_name, activity, progress_notes } = data;
             const rec = collegeContacts.find(c => c?.college && college && c.college.trim().toLowerCase() === college.trim().toLowerCase()) || collegeContacts.find(c => c.college === college);
             const toEmails = [];
-            if (rec?.senior_manager_email && rec.senior_manager_email.includes('@')) toEmails.push(rec.senior_manager_email.trim());
+            splitEmails(rec?.senior_manager_email).forEach(e => toEmails.push(e));
             if (!toEmails.length) toEmails.push(BREVO_CONFIG.escalationEmail || 'thanush@faceprep.in');
 
             const fullCc = buildFullCc();
             fullCc.push('thanush@faceprep.in');
-            if (rec?.campus_manager_email && rec.campus_manager_email.includes('@')) fullCc.push(rec.campus_manager_email.trim().toLowerCase());
+            splitEmails(rec?.campus_manager_email).forEach(e => fullCc.push(e.toLowerCase()));
             const ccEmails = [...new Set(fullCc)].filter(e => !toEmails.map(t => t.toLowerCase()).includes(e));
 
             const htmlContent = `
@@ -7621,6 +7631,11 @@
               })
             });
 
+            if (!res.ok) {
+              const errText = await res.text().catch(() => '');
+              console.error('📧 Brevo rejected email (notify-hardcall): HTTP ' + res.status, errText);
+              return { data: null, error: new Error('Brevo HTTP ' + res.status + ': ' + errText) };
+            }
             const resData = await res.json();
             console.log('📧 Brevo hard-call alert dispatched:', resData);
             return { data: resData, error: null };
@@ -7630,8 +7645,8 @@
             const { ticketId, studentName, rollNumber, college, category, subject, status, adminNote, closedBy } = data;
             const rec = collegeContacts.find(c => c?.college && college && c.college.trim().toLowerCase() === college.trim().toLowerCase()) || collegeContacts.find(c => c.college === college);
             const toEmails = [];
-            if (rec?.campus_manager_email && rec.campus_manager_email.includes('@')) toEmails.push(rec.campus_manager_email.trim());
-            if (rec?.senior_manager_email && rec.senior_manager_email.includes('@') && !toEmails.includes(rec.senior_manager_email.trim())) toEmails.push(rec.senior_manager_email.trim());
+            splitEmails(rec?.campus_manager_email).forEach(e => toEmails.push(e));
+            splitEmails(rec?.senior_manager_email).forEach(e => { if (!toEmails.map(t => t.toLowerCase()).includes(e.toLowerCase())) toEmails.push(e); });
             if (!toEmails.length) toEmails.push('thanush@faceprep.in');
 
             const fullCc = buildFullCc();
@@ -7688,6 +7703,11 @@
               })
             });
 
+            if (!res.ok) {
+              const errText = await res.text().catch(() => '');
+              console.error('📧 Brevo rejected email (notify-ticket-status): HTTP ' + res.status, errText);
+              return { data: null, error: new Error('Brevo HTTP ' + res.status + ': ' + errText) };
+            }
             const resData = await res.json().catch(() => ({}));
             console.log('📧 Brevo ticket status email dispatched:', resData);
             return { data: resData, error: null };
@@ -9462,7 +9482,7 @@
               adminNote: payload.admin_note,
               closedBy: payload.closed_by
             }
-          }).catch(e => console.warn('notify-ticket-status notice:', e));
+          }).then(r => { if (r && r.error) showToast('Saved, but the email could not be sent'); }).catch(e => console.warn('notify-ticket-status notice:', e));
         }
 
         savedMsg.style.color = 'var(--green)';
@@ -9782,7 +9802,7 @@
               activity,
               progress_notes: progress,
             }
-          }).catch(e => console.error('notify-hardcall failed', e));
+          }).then(r => { if (r && r.error) showToast('Saved, but the email could not be sent'); }).catch(e => console.error('notify-hardcall failed', e));
         }
         /* jump the calendar to the month of the entry just filed, so the new dot is visible immediately */
         dlogCalMonth = new Date(date + 'T00:00:00');
@@ -10450,7 +10470,7 @@
                 observationDate: obsDate,
                 recipientEmail: seniorManagerEmail,
               }
-            }).catch(e => console.error('notify-not-satisfied failed', e));
+            }).then(r => { if (r && r.error) showToast('Saved, but the email could not be sent'); }).catch(e => console.error('notify-not-satisfied failed', e));
           }
           $('snap-teacher').value = ''; $('snap-course-type').value = ''; $('snap-subject').value = '';
           $('snap-professionalism').value = ''; $('snap-class-handling').value = '';
@@ -11055,7 +11075,7 @@
                 to: recC?.campus_manager_email, cc: recC?.senior_manager_email,
                 by: reviewerName, link, history,
               }
-            }).catch(e => console.error('notify sheet_shared failed for', college, e));
+            }).then(r => { if (r && r.error) showToast('Saved, but the email could not be sent'); }).catch(e => console.error('notify sheet_shared failed for', college, e));
             successCount++;
           } catch (e) {
             console.error('Could not send link to', college, e);
@@ -11561,7 +11581,7 @@ ${stage > 1 && rec && rec.kam_sheet_link ? submissionLinkHtml(rec.kam_sheet_link
             to: rec?.senior_manager_email, cc: rec?.campus_manager_email,
             by: name, revision, reportUrl, history: reportRecord.history,
           }
-        }).catch(e => console.error('notify report_sent failed', e));
+        }).then(r => { if (r && r.error) showToast('Saved, but the email could not be sent'); }).catch(e => console.error('notify report_sent failed', e));
         rmSelectedFile = null;
         const fileInput = $('rm-file-input'); if (fileInput) fileInput.value = '';
         renderReportMonitor();
@@ -11637,7 +11657,7 @@ ${stage > 1 && rec && rec.kam_sheet_link ? submissionLinkHtml(rec.kam_sheet_link
               : [rec2b?.campus_manager_email, rec2b?.senior_manager_email].filter(Boolean),
             by: reviewer.trim(), shared, history: reportRecord.history,
           }
-        }).catch(e => console.error('notify arun_shared failed', e));
+        }).then(r => { if (r && r.error) showToast('Saved, but the email could not be sent'); }).catch(e => console.error('notify arun_shared failed', e));
         renderReportMonitor();
         loadReportCollegeHistory();
         loadReportCollegeStages(reportMonitorMonth).then(populateReportCollegeSelect); showToast(shared ? 'Confirmed — moving to next step' : 'Marked as not shared yet');
@@ -11666,7 +11686,7 @@ ${stage > 1 && rec && rec.kam_sheet_link ? submissionLinkHtml(rec.kam_sheet_link
             to: rec2c?.campus_manager_email, cc: rec2c?.senior_manager_email,
             by: reviewer.trim(), history: reportRecord.history,
           }
-        }).catch(e => console.error('notify report_approved failed', e));
+        }).then(r => { if (r && r.error) showToast('Saved, but the email could not be sent'); }).catch(e => console.error('notify report_approved failed', e));
         renderReportMonitor();
         loadReportCollegeHistory();
         loadReportCollegeStages(reportMonitorMonth).then(populateReportCollegeSelect);
@@ -11696,7 +11716,7 @@ ${stage > 1 && rec && rec.kam_sheet_link ? submissionLinkHtml(rec.kam_sheet_link
             to: rec2d?.campus_manager_email, cc: rec2d?.senior_manager_email,
             by: reviewer.trim(), remark, revision: prevRevision + 1, history: reportRecord.history,
           }
-        }).catch(e => console.error('notify report_rejected failed', e));
+        }).then(r => { if (r && r.error) showToast('Saved, but the email could not be sent'); }).catch(e => console.error('notify report_rejected failed', e));
         renderReportMonitor();
         loadReportCollegeHistory();
         loadReportCollegeStages(reportMonitorMonth).then(populateReportCollegeSelect); showToast('Sent back to campus manager with remarks');
@@ -11734,7 +11754,7 @@ ${stage > 1 && rec && rec.kam_sheet_link ? submissionLinkHtml(rec.kam_sheet_link
             to: rec?.senior_manager_email, cc: rec?.campus_manager_email,
             by: name, proofUrl, history: reportRecord.history,
           }
-        }).catch(e => console.error('notify shared_with_stakeholder failed', e));
+        }).then(r => { if (r && r.error) showToast('Saved, but the email could not be sent'); }).catch(e => console.error('notify shared_with_stakeholder failed', e));
         rmProofFile = null;
         renderReportMonitor();
         loadReportCollegeHistory();
