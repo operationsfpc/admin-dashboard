@@ -7367,8 +7367,42 @@
         const set = new Set();
         if (BREVO_CONFIG.defaultCc) set.add(BREVO_CONFIG.defaultCc.toLowerCase());
         (BREVO_CONFIG.extraCc || []).forEach(e => set.add(e.toLowerCase()));
-        getAllKamEmails().forEach(e => set.add(e));
         return [...set];
+      }
+      // Recipient rules for every college email:
+      //  - recipients are only: the college's own KAM, its CM (or Incharge, stored in the same
+      //    column when the college has no CM), ashok@ and sainaveen@ (always CC'd);
+      //  - official @faceprep.in addresses only, never personal Gmail;
+      //  - another college's KAM never receives it;
+      //  - if the college, its KAM or its CM/Incharge has no official address on file, the email
+      //    is not sent and a warning asks for the contact to be corrected.
+      const MANDATORY_CC = ['ashok@faceprep.in', 'sainaveen@faceprep.in'];
+      const isOfficialEmail = (e) => /^[^\s@,;]+@faceprep\.in$/i.test(String(e || '').trim());
+      function applyRecipientRules(toEmails, ccEmails, college, extraAllowed = []) {
+        const key = String(college || '').trim().toLowerCase();
+        const rec = key ? (collegeContacts || []).find(c => String(c.college || '').trim().toLowerCase() === key) : null;
+        const kams = splitEmails(rec?.senior_manager_email).filter(isOfficialEmail).map(e => e.toLowerCase());
+        const cms = splitEmails(rec?.campus_manager_email).filter(isOfficialEmail).map(e => e.toLowerCase());
+        const problems = [];
+        if (!rec) problems.push('college not found in college contacts');
+        else {
+          if (!kams.length) problems.push('no official KAM email');
+          if (!cms.length) problems.push('no official CM / Incharge email');
+        }
+        if (problems.length) {
+          const msg = `Email NOT sent for ${college || 'unknown college'}: ${problems.join(', ')}. Please correct the college contacts.`;
+          console.error('📧 ' + msg);
+          showToast(msg);
+          return false;
+        }
+        const allowed = new Set([...kams, ...cms, ...MANDATORY_CC, ...extraAllowed.map(e => e.toLowerCase())]);
+        const to = [...new Set(toEmails.map(e => String(e).toLowerCase()).filter(e => allowed.has(e)))];
+        if (!to.length) to.push(...cms);
+        const cc = [...new Set([...ccEmails.map(e => String(e).toLowerCase()), ...kams, ...cms, ...MANDATORY_CC])]
+          .filter(e => allowed.has(e) && !to.includes(e));
+        toEmails.splice(0, toEmails.length, ...to);
+        ccEmails.splice(0, ccEmails.length, ...cc);
+        return true;
       }
 
       const _origFunctionsInvoke = sb.functions.invoke.bind(sb.functions);
@@ -7392,6 +7426,9 @@
             const ccSet = new Set(fullCc);
             callerCc.forEach(e => ccSet.add(e.toLowerCase()));
             const ccEmails = [...ccSet].filter(e => !toEmails.map(t => t.toLowerCase()).includes(e));
+            if (!applyRecipientRules(toEmails, ccEmails, college, step === 'arun_shared' ? ['arun.senthil@faceprep.in'] : [])) {
+              return { data: null, error: new Error('Email blocked: recipient check failed for ' + college) };
+            }
 
             let subject = `[Monthly Report] Update — ${college || 'Campus'} (${reportMonth || 'Current'})`;
             let stepTitle = 'Report Workflow Update';
@@ -7517,6 +7554,9 @@
             const fullCc = buildFullCc();
             fullCc.push('thanush@faceprep.in');
             const ccEmails = [...new Set(fullCc)].filter(e => !toEmails.map(t => t.toLowerCase()).includes(e.toLowerCase()));
+            if (!applyRecipientRules(toEmails, ccEmails, college)) {
+              return { data: null, error: new Error('Email blocked: recipient check failed for ' + college) };
+            }
 
             const htmlContent = `
         <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #FCA5A5;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(220,38,38,0.08);">
@@ -7583,6 +7623,9 @@
             fullCc.push('thanush@faceprep.in');
             splitEmails(rec?.campus_manager_email).forEach(e => fullCc.push(e.toLowerCase()));
             const ccEmails = [...new Set(fullCc)].filter(e => !toEmails.map(t => t.toLowerCase()).includes(e));
+            if (!applyRecipientRules(toEmails, ccEmails, college)) {
+              return { data: null, error: new Error('Email blocked: recipient check failed for ' + college) };
+            }
 
             const htmlContent = `
         <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #FCA5A5;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(220,38,38,0.08);">
@@ -7652,6 +7695,9 @@
             const fullCc = buildFullCc();
             fullCc.push('thanush@faceprep.in');
             const ccEmails = [...new Set(fullCc)].filter(e => !toEmails.map(t => t.toLowerCase()).includes(e));
+            if (!applyRecipientRules(toEmails, ccEmails, college)) {
+              return { data: null, error: new Error('Email blocked: recipient check failed for ' + college) };
+            }
 
             const isResolved = status === 'resolved';
             const badgeColor = isResolved ? '#16A34A' : '#D9840C';
